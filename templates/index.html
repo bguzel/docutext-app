@@ -6,23 +6,40 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>DocuText PDF OCR</h1>
         {% if current_user.is_authenticated %}
-            <span>Hello, {{ current_user.email }}! <a href="{{ url_for('logout') }}" class="ml-3">Logout</a></span>
+            <span>Hello, {{ current_user.email }}! <a href="{{ url_for('logout') }}" class="ml-3 btn btn-sm btn-outline-secondary">Logout</a></span>
         {% endif %}
     </div>
-    <p>Upload a PDF, choose a language, and we'll make it searchable.</p>
+
+    <!-- THIS IS THE SECTION THAT IS MISSING ON YOUR LIVE SITE -->
+    <div class="card bg-light">
+        <div class="card-body">
+            <h5 class="card-title">Your Plan: <span class="badge badge-info">{{ current_user.plan|title }}</span></h5>
+            {% if current_user.plan == 'free' %}
+                <p class="card-text">You have a limit of 5 pages. Upgrade to the Pro plan for 200 pages/month!</p>
+                <a href="{{ url_for('create_paddle_checkout') }}" class="btn btn-success">Upgrade to Pro</a>
+            {% else %}
+                <p class="card-text">You are on the Pro plan with a 200-page limit. Thank you for your support!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+    <!-- END OF MISSING SECTION -->
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message|safe }}</div>
+                <div class="alert alert-{{ category }} mt-3">{{ message|safe }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <form action="/" method="post" enctype="multipart/form-data" class="mt-4">
+    <h3 class="mt-4">Process a New PDF</h3>
+    <form action="/" method="post" enctype="multipart/form-data" class="mt-3 p-4 border rounded">
         <div class="form-group">
             <label for="file">1. Choose a PDF file:</label>
             <input type="file" class="form-control-file" id="file" name="file" accept=".pdf" required>
