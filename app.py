@@ -159,19 +159,28 @@ def cancel():
 # --- Authentication and Other Routes (All Unchanged) ---
 # ... (The rest of the file is identical to before) ...
 @app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated: return redirect(url_for('index'))
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if request.method == 'POST':
-        email, password = request.form['email'], request.form['password']
+        email = request.form['email']
+        password = request.form['password']
         if User.query.filter_by(email=email).first():
             flash('Email address already exists. Please log in.', 'warning')
             return redirect(url_for('login'))
+
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        # ### THIS IS THE CORRECTED LINE ###
+        # We now explicitly set the plan for every new user.
         new_user = User(email=email, password_hash=hashed_password, plan='free')
+
         db.session.add(new_user)
         db.session.commit()
         flash('Account created successfully! Please log in.', 'success')
         return redirect(url_for('login'))
+
     return render_template('register.html', title='Register')
 
 @app.route('/login', methods=['GET', 'POST'])
