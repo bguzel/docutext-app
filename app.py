@@ -128,16 +128,17 @@ def create_paddle_checkout():
 
         transaction = paddle_client.transactions.create(transaction_data)
 
-        # ### THIS IS THE FINAL, CORRECT LINE ###
-        # Based on the object structure we printed out.
+        # This line is correct, the error is happening before it.
         checkout_url = transaction.checkout.url
-
         return redirect(checkout_url)
 
     except Exception as e:
-        # You can now remove the print statements if you wish
-        print(f"Paddle API Error: {e}")
-        flash('Error communicating with payment provider.', 'danger')
+        # ### THIS IS THE CRITICAL CHANGE ###
+        # We are now flashing the ACTUAL error message to the browser.
+        error_message = str(e)
+        print(f"PADDLE API ERROR: {error_message}")  # Still print to logs
+        flash(f"Error communicating with provider: {error_message}", 'danger')
+
         return redirect(url_for('index'))
 
 @app.route('/success')
