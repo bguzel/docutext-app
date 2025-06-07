@@ -34,4 +34,5 @@ EXPOSE 10000
 
 # Step 9: The command to run your application using the Gunicorn server.
 # This is what starts your app when the container launches.
-CMD ["gunicorn", "--workers", "1", "--worker-class", "gevent", "--bind", "0.0.0.0:10000", "app:app"]
+# The final command to run our startup script.
+CMD ["./startup.sh"]
