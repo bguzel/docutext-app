@@ -126,19 +126,30 @@ def create_paddle_checkout():
             }
         }
 
+        # This call is succeeding, but returning an unexpected object.
         transaction = paddle_client.transactions.create(transaction_data)
 
-        # This line is correct, the error is happening before it.
-        checkout_url = transaction.checkout.url
-        return redirect(checkout_url)
+        # --- NEW, ROBUST DEBUGGING ---
+        # 1. Print the entire object to the logs to see its structure.
+        print("--- PADDLE RESPONSE OBJECT ---")
+        print(transaction)
+        print("------------------------------")
+
+        # 2. Check if the 'checkout' attribute exists and has a URL.
+        if transaction and hasattr(transaction, 'checkout') and transaction.checkout and hasattr(transaction.checkout,
+                                                                                                 'url'):
+            checkout_url = transaction.checkout.url
+            return redirect(checkout_url)
+        else:
+            # 3. If it doesn't exist, flash a specific error message.
+            flash('Provider returned a response without a checkout URL. Please check logs.', 'danger')
+            return redirect(url_for('index'))
 
     except Exception as e:
-        # ### THIS IS THE CRITICAL CHANGE ###
-        # We are now flashing the ACTUAL error message to the browser.
+        # This block is not being hit, but we'll keep it for safety.
         error_message = str(e)
-        print(f"PADDLE API ERROR: {error_message}")  # Still print to logs
-        flash(f"Error communicating with provider: {error_message}", 'danger')
-
+        print(f"PADDLE API EXCEPTION: {error_message}")
+        flash(f"An exception occurred: {error_message}", 'danger')
         return redirect(url_for('index'))
 
 @app.route('/success')
