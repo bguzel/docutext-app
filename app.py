@@ -104,10 +104,14 @@ def index():
 # --- Paddle Payment Routes ---
 # --- Paddle Payment Routes ---
 # --- Paddle Payment Routes ---
+# --- Paddle Payment Routes ---
 @app.route('/create-paddle-checkout')
 @login_required
 def create_paddle_checkout():
     try:
+        # ### FINAL SIMPLIFIED API CALL ###
+        # We are removing the explicit checkout settings.
+        # This should force Paddle to use its default hosted checkout flow.
         transaction_data = {
             "items": [
                 {
@@ -118,38 +122,19 @@ def create_paddle_checkout():
             "customer": {
                 "email": current_user.email
             },
-            "checkout": {
-                "settings": {
-                    "success_url": url_for('success', _external=True),
-                    "cancel_url": url_for('cancel', _external=True),
-                }
-            }
         }
 
-        # This call is succeeding, but returning an unexpected object.
         transaction = paddle_client.transactions.create(transaction_data)
 
-        # --- NEW, ROBUST DEBUGGING ---
-        # 1. Print the entire object to the logs to see its structure.
-        print("--- PADDLE RESPONSE OBJECT ---")
-        print(transaction)
-        print("------------------------------")
+        # The path to the URL is correct, but the URL itself was the problem.
+        # This new call should generate the correct external Paddle URL.
+        checkout_url = transaction.checkout.url
 
-        # 2. Check if the 'checkout' attribute exists and has a URL.
-        if transaction and hasattr(transaction, 'checkout') and transaction.checkout and hasattr(transaction.checkout,
-                                                                                                 'url'):
-            checkout_url = transaction.checkout.url
-            return redirect(checkout_url)
-        else:
-            # 3. If it doesn't exist, flash a specific error message.
-            flash('Provider returned a response without a checkout URL. Please check logs.', 'danger')
-            return redirect(url_for('index'))
+        return redirect(checkout_url)
 
     except Exception as e:
-        # This block is not being hit, but we'll keep it for safety.
-        error_message = str(e)
-        print(f"PADDLE API EXCEPTION: {error_message}")
-        flash(f"An exception occurred: {error_message}", 'danger')
+        print(f"Paddle API Error: {e}")
+        flash('Error communicating with payment provider.', 'danger')
         return redirect(url_for('index'))
 
 @app.route('/success')
